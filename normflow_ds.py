@@ -37,7 +37,7 @@ def jacobian(y, x, create_graph=False):
     return torch.stack(jac).reshape(y.shape + x.shape)                                                
                                                                                                       
 
-class NormalizingFlowPolicy(nn.Module):
+class NormalizingFlowDynamicalSystem(nn.Module):
     
     def __init__(self, dim=2, n_flows=3):
         super().__init__()
