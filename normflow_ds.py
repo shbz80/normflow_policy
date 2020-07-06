@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+import numpy as np
+
 import flow
 
 class QuadraticPotentialFunction(nn.Module):
@@ -23,7 +25,6 @@ class QuadraticPotentialFunction(nn.Module):
         
         return (x - x_star)*2
 
-#batch version jacobian
 #https://gist.github.com/apaszke/226abdf867c4e9d6698bd198f3b45fb7
 def jacobian(y, x, create_graph=False):                                                               
     jac = []                                                                                          
@@ -34,7 +35,33 @@ def jacobian(y, x, create_graph=False):
         grad_x, = torch.autograd.grad(flat_y, x, grad_y, retain_graph=True, create_graph=create_graph)
         jac.append(grad_x.reshape(x.shape))                                                           
         grad_y[i] = 0.                                                                                
-    return torch.stack(jac).reshape(y.shape + x.shape)                                                
+    return torch.stack(jac).reshape(y.shape + x.shape)
+
+
+#batch version jacobian
+#https://github.com/pytorch/pytorch/issues/23475
+def jacobian_in_batch(y, x):
+    '''
+    Compute the Jacobian matrix in batch form.
+    Return (B, D_y, D_x)
+    '''
+
+    batch = y.shape[0]
+    single_y_size = np.prod(y.shape[1:])
+    y = y.view(batch, -1)
+    vector = torch.ones(batch).to(y)
+
+    # Compute Jacobian row by row.
+    # dy_i / dx -> dy / dx
+    # (B, D) -> (B, 1, D) -> (B, D, D)
+    jac = [torch.autograd.grad(y[:, i], x, 
+                               grad_outputs=vector, 
+                               retain_graph=True,
+                               create_graph=True)[0].view(batch, -1)
+                for i in range(single_y_size)]
+    jac = torch.stack(jac, dim=1)
+    
+    return jac                                                
                                                                                                       
 
 class NormalizingFlowDynamicalSystem(nn.Module):
@@ -43,13 +70,22 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         super().__init__()
         self.flows = [flow.RealNVP(dim, hidden_dim=8, base_network=flow.FCNN) for i in range(n_flows)]
         self.phi = nn.Sequential(*self.flows)
-        self.potential = QuadraticPotentialFunction
+        self.potential = QuadraticPotentialFunction(feature=self.phi)
         self.dim = dim
     
     def forward(self, x, x_star):
-        phi_jac = jacobian(self.phi(x), x, create_graph=True)
-        potential_grad = -self.potential.forward_grad_feature(x, x_star)
-        return torch.solve(potential_grad, phi_jac)
+        phi_jac = jacobian_in_batch(self.phi(x), x)
+        potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
+        return torch.solve(potential_grad, phi_jac)[0].squeeze(-1)
     
-    
+    def init_phi(self):
+
+        def param_init(m):
+            if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    torch.nn.init.zeros_(m.bias)
+        
+        self.phi.apply(param_init)
+        return
     
