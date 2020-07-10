@@ -73,11 +73,19 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         self.potential = QuadraticPotentialFunction(feature=self.phi)
         self.dim = dim
     
-    def forward(self, x, x_star):
+    def forward(self, x, x_star, inv=False):
+        '''
+        x:          state pos
+        x_star:     equilibrium pos
+        inv:        use inverse of Jacobian or not. works as change of coordinate if True
+        '''
         phi_jac = jacobian_in_batch(self.phi(x), x)
         potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
-        return torch.solve(potential_grad, phi_jac)[0].squeeze(-1)
-    
+        if inv:
+            return torch.solve(potential_grad, phi_jac)[0].squeeze(-1)
+        else:
+            return torch.bmm(phi_jac.transpose(1, 2), potential_grad).squeeze(-1)
+
     def init_phi(self):
 
         def param_init(m):
