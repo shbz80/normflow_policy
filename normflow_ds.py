@@ -123,6 +123,16 @@ class NormalizingFlowDynamicalSystem(nn.Module):
             return torch.solve(potential_grad, phi_jac)[0].squeeze(-1) + damping_acc
         else: 
             return torch.bmm(phi_jac.transpose(1, 2), potential_grad).squeeze(-1) + damping_acc
+    
+    def null_space_proj(self, x, plane_norm):
+        '''
+        project x to the plane defined by plane_norm, batch-wise processing
+        x:          batch of vectors with dim length
+        plane_norm: batch of norms
+        '''
+        norm_dir = torch.div(plane_norm, torch.clamp(torch.sum(plane_norm**2, dim=1, keepdim=True), min=1e-6))
+        proj_len = torch.bmm(x.view(x.shape[0], 1, x.shape[1]), plane_norm.view(plane_norm.shape[0], plane_norm.shape[1], 1)).squeeze(-1)
+        return x - proj_len*norm_dir
 
     def init_phi(self):
 
