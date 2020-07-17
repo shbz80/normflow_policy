@@ -56,7 +56,7 @@ class UJICharHandWritingEnv(gym.Env):
         self.viewer = None
         
         self.max_speed = 8
-        self.max_force = 2.
+        self.max_force = 10.
 
         force_high = np.array([self.max_speed, self.max_speed])
         high = np.array([2.5, 2.5, self.max_speed, self.max_speed], dtype=np.float32)
@@ -84,14 +84,16 @@ class UJICharHandWritingEnv(gym.Env):
         m = self.m
         dt = self.dt
 
-        u = np.clip(u, -self.max_force, self.max_force)[0]
+        done = False
+
+        u = np.clip(u, -self.max_force, self.max_force)
         self.last_u = u  # for rendering
         
         if self.t < self.tar_traj.shape[0]:
             target_x = self.tar_traj[self.t]
         else:
             target_x = self.tar_traj[-1]
-        costs = (x-target_x)**2 + .001 * (u ** 2)
+        costs = np.sum((x-target_x)**2) + .001 * np.sum(u ** 2)
 
         #integrate system: semi-implicit 
         x_acc = u / m
@@ -100,7 +102,10 @@ class UJICharHandWritingEnv(gym.Env):
 
         self.state = np.concatenate([new_x, new_x_dot])
         self.t+=1
-        return self._get_obs(), -costs, False, {}
+
+        if self.t > 200:
+            done = True
+        return self._get_obs(), -costs, done, {}
 
     def reset(self):
         self.state = np.concatenate([self.tar_traj[0] + self.np_random.randn(2)*0.1, np.zeros(2)])
