@@ -44,6 +44,7 @@ s_traj = np.array([ 0.85690839,  0.85743145,  0.8582298 ,  0.85890674,  0.859065
         0.93309763,  0.93537005,  0.93618565,  0.93573531,  0.93421319,
         0.93182586,  0.92878715,  0.92531028,  0.92160587,  0.91788348,
         0.91432891,  0.91109287,  0.90832321,  0.90616781,  0.90477454]).reshape(2, 100).T
+s_traj[:, 1] = -s_traj[:, 1]
 
 class UJICharHandWritingEnv(gym.Env):
     def __init__(self):
@@ -118,30 +119,31 @@ class UJICharHandWritingEnv(gym.Env):
         return np.array(self.state)
 
     def render(self, mode='human'):
-        # if self.viewer is None:
-        #     from gym.envs.classic_control import rendering
-        #     self.viewer = rendering.Viewer(500, 500)
-        #     self.viewer.set_bounds(-2.2, 2.2, -2.2, 2.2)
-        #     rod = rendering.make_capsule(1, .2)
-        #     rod.set_color(.8, .3, .3)
-        #     self.pole_transform = rendering.Transform()
-        #     rod.add_attr(self.pole_transform)
-        #     self.viewer.add_geom(rod)
-        #     axle = rendering.make_circle(.05)
-        #     axle.set_color(0, 0, 0)
-        #     self.viewer.add_geom(axle)
-        #     fname = path.join(path.dirname(__file__), "assets/clockwise.png")
-        #     self.img = rendering.Image(fname, 1., 1.)
-        #     self.imgtrans = rendering.Transform()
-        #     self.img.add_attr(self.imgtrans)
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.Viewer(500, 500)
+            self.viewer.set_bounds(-1.2, 2.5, -1.2, 2.5)
+
+            #reference trajectory, fixed
+            ref_traj = rendering.make_polyline(self.tar_traj)
+            ref_traj.set_linewidth(2.0)
+            ref_traj.set_color(0.0, 0.0, 0.0)
+            self.viewer.add_geom(ref_traj)
+            #dot agent
+            dot_agent = rendering.make_circle(radius=0.05)
+            dot_agent.set_color(1.0, 0.0, 0.0)
+
+            self.dot_agent_pos = rendering.Transform()
+            dot_agent.add_attr(self.dot_agent_pos)
+            self.viewer.add_geom(dot_agent)
+
 
         # self.viewer.add_onetime(self.img)
-        # self.pole_transform.set_rotation(self.state[0] + np.pi / 2)
+        self.dot_agent_pos.set_translation(self.state[0], self.state[1])
         # if self.last_u:
         #     self.imgtrans.scale = (-self.last_u / 2, np.abs(self.last_u) / 2)
 
-        # return self.viewer.render(return_rgb_array=mode == 'rgb_array')
-        return None
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
     def close(self):
         if self.viewer:

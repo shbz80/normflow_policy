@@ -101,7 +101,7 @@ def test_ppo(args=get_args()):
         # Let's watch its performance!
         env = UJICharHandWritingEnv()
         collector = Collector(policy, env, preprocess_fn=None)
-        result = collector.collect(n_step=2000, render=args.render)
+        result = collector.collect(n_step=200, render=args.render)
         print('Final reward: {0}, length: {1}'.format(result["rew"], result["len"]))
         collector.close()
 
