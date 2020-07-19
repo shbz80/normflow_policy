@@ -94,6 +94,7 @@ class UJICharHandWritingEnv(gym.Env):
             target_x = self.tar_traj[self.t]
         else:
             target_x = self.tar_traj[-1]
+        # target_x = self.tar_traj[-1]
         costs = np.sum((x-target_x)**2) + .001 * np.sum(u ** 2)
 
         #integrate system: semi-implicit 
@@ -104,12 +105,12 @@ class UJICharHandWritingEnv(gym.Env):
         self.state = np.concatenate([new_x, new_x_dot])
         self.t+=1
 
-        if self.t > 200:
+        if self.t >= 110:
             done = True
         return self._get_obs(), -costs, done, {}
 
     def reset(self):
-        self.state = np.concatenate([self.tar_traj[0] + self.np_random.randn(2)*0.1, np.zeros(2)])
+        self.state = np.concatenate([self.tar_traj[0] + self.np_random.randn(2)*0.05, np.zeros(2)])
         self.last_u = None
         self.t = 0
         return self._get_obs()
