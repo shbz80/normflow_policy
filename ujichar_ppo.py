@@ -22,7 +22,7 @@ def get_args():
     parser.add_argument('--buffer-size', type=int, default=20000)
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--gamma', type=float, default=1.)
-    parser.add_argument('--epoch', type=int, default=20)
+    parser.add_argument('--epoch', type=int, default=200)
     parser.add_argument('--step-per-epoch', type=int, default=100)
     parser.add_argument('--collect-per-step', type=int, default=1)
     parser.add_argument('--repeat-per-collect', type=int, default=2)
@@ -122,7 +122,7 @@ def test_ppo(args=get_args()):
         # Let's watch its performance!
         env = UJICharHandWritingEnv()
         collector = Collector(policy, env, preprocess_fn=None)
-        result = collector.collect(n_step=200, render=args.render)
+        result = collector.collect(n_step=100, render=args.render)
         print('Final reward: {0}, length: {1}'.format(result["rew"], result["len"]))
         collector.close()
 
