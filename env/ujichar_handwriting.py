@@ -51,7 +51,7 @@ class UJICharHandWritingEnv(gym.Env):
         self.tar_traj = s_traj - s_traj[-1, :]  #make destination origin
 
         self.dt = .01
-        self.m = 1.
+        self.m = 0.01
         self.t = 0
         
         self.viewer = None
@@ -95,7 +95,7 @@ class UJICharHandWritingEnv(gym.Env):
         else:
             target_x = self.tar_traj[-1]
         # target_x = self.tar_traj[-1]
-        costs = np.sum((x-target_x)**2) + 0.000 * np.sum(u ** 2)
+        costs = np.sum((x-target_x)**2) + 0.01 * np.sum(u ** 2)
 
         #integrate system: semi-implicit 
         x_acc = u / m
