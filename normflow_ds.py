@@ -45,7 +45,6 @@ def jacobian_in_batch(y, x):
     Compute the Jacobian matrix in batch form.
     Return (B, D_y, D_x)
     '''
-
     batch = y.shape[0]
     single_y_size = np.prod(y.shape[1:])
     y = y.view(batch, -1)
@@ -93,7 +92,8 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         x_star:     equilibrium pos
         inv:        use inverse of Jacobian or not. works as change of coordinate if True
         '''
-        phi_jac = jacobian_in_batch(self.phi(x), x)
+        y = self.phi(x)
+        phi_jac = jacobian_in_batch(y, x)
         potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
         if inv:
             return torch.solve(potential_grad, phi_jac)[0].squeeze(-1)
@@ -107,7 +107,9 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         x_dot:          time derivative of x
         jac_damping:    apply jacobian to damping matrix?
         '''
-        phi_jac = jacobian_in_batch(self.phi(x), x)
+        y = self.phi(x)
+        # print(y.requires_grad, x.requires_grad)
+        phi_jac = jacobian_in_batch(y, x)
         potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
 
         if jac_damping:
@@ -144,4 +146,71 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         
         self.phi.apply(param_init)
         return
+
+from typing import Dict, List, Tuple, Union, Optional
+
+from tianshou.data import Batch, to_torch
+from tianshou.policy import PPOPolicy
+
+class NormalizingFlowDynamicalSystemActorProb(nn.Module):
+    """
+    actor accounting stability of samples for tianshou
+    """
+
+    def __init__(self, preprocess_net, action_shape,
+                 max_action, device='cpu', unbounded=False):
+        super().__init__()
+        self.normflow_ds = preprocess_net    #this is the normflow dynamics...
+        self.device = device
+        self._max = max_action
+        self._unbounded = unbounded
+
+        self.sigma = nn.Parameter(torch.zeros(np.prod(action_shape), 1))
+
+    def forward(self, s, state=None, **kwargs):
+
+        s = to_torch(s, device=self.device, dtype=torch.float32)
+        s = s.flatten(1)
+        
+        x = s[:, :self.normflow_ds.dim]
+        x.requires_grad_()
+        x_dot = s[:, self.normflow_ds.dim:]
+        x_dot.requires_grad_()
+        print(x, x_dot)
+        #the default destination is origin in R^n
+        mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot).detach()
+
+        shape = [1] * len(mu.shape)
+        shape[1] = -1
+        sigma = (self.sigma.view(shape) + torch.zeros_like(mu)).exp()
+        return (mu, sigma), None
     
+class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
+    def __init__(self,
+                 actor: NormalizingFlowDynamicalSystemActorProb,
+                 critic: torch.nn.Module,
+                 optim: torch.optim.Optimizer,
+                 dist_fn: torch.distributions.Distribution,
+                 discount_factor: float = 0.99,
+                 max_grad_norm: Optional[float] = None,
+                 eps_clip: float = .2,
+                 vf_coef: float = .5,
+                 ent_coef: float = .01,
+                 action_range: Optional[Tuple[float, float]] = None,
+                 gae_lambda: float = 0.95,
+                 dual_clip: Optional[float] = None,
+                 value_clip: bool = True,
+                 reward_normalization: bool = True,
+                 **kwargs) -> None:
+        super().__init__(actor, critic, optim, dist_fn, discount_factor, max_grad_norm, 
+                eps_clip, vf_coef, ent_coef, action_range,
+                gae_lambda, dual_clip, value_clip, reward_normalization, **kwargs)
+    
+    def forward(self, batch: Batch,
+                state: Optional[Union[dict, Batch, np.ndarray]] = None,
+                **kwargs) -> Batch:
+        ret_batch = super().forward(batch, state, **kwargs)
+        #project batch action to nullspace to maintain stability
+        batch_x_dot = batch.obs[:, self.actor.normflow_ds.dim:]
+        ret_batch.act = self.actor.normflow_ds.null_space_proj(ret_batch.act, batch_x_dot)
+        return ret_batch
