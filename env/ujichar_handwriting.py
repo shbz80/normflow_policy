@@ -51,7 +51,7 @@ class UJICharHandWritingEnv(gym.Env):
         self.tar_traj = s_traj - s_traj[-1, :]  #make destination origin
 
         self.dt = .01
-        self.m = 0.01
+        self.m = 0.1
         self.t = 0
         
         self.viewer = None

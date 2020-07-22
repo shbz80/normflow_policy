@@ -126,6 +126,12 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         else: 
             return torch.bmm(phi_jac.transpose(1, 2), potential_grad).squeeze(-1) + damping_acc
     
+    def potential_with_damping(self, x, x_star, x_dot, M):
+        #M: batched version of mass, could be spd depending on x
+        x_potential = 0.5*self.potential.forward(x, x_star)
+        x_dot_potential = 0.5*torch.bmm(torch.bmm(x_dot.unsqueeze(1), M), x_dot).squeeze(-1)
+        return x_potential + x_dot_potential
+
     def null_space_proj(self, x, plane_norm):
         '''
         project x to the plane defined by plane_norm, batch-wise processing
@@ -176,9 +182,12 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         x.requires_grad_()
         x_dot = s[:, self.normflow_ds.dim:]
         x_dot.requires_grad_()
-        print(x, x_dot)
-        #the default destination is origin in R^n
-        mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot).detach()
+
+        #we need to enable grad computation because tianshou collector called no_grad with an expectation
+        #of inference only torch module for policy evaluation. however, we need this for jacobian computation
+        with torch.enable_grad():
+            #the default destination is origin in R^n
+            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot).detach()
 
         shape = [1] * len(mu.shape)
         shape[1] = -1
@@ -211,6 +220,10 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
                 **kwargs) -> Batch:
         ret_batch = super().forward(batch, state, **kwargs)
         #project batch action to nullspace to maintain stability
-        batch_x_dot = batch.obs[:, self.actor.normflow_ds.dim:]
-        ret_batch.act = self.actor.normflow_ds.null_space_proj(ret_batch.act, batch_x_dot)
+        batch_u = ret_batch.act
+        batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
+        ret_batch.act = self.actor.normflow_ds.null_space_proj(batch_u, batch_x_dot).detach()
         return ret_batch
+
+
+

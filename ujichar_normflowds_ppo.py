@@ -72,9 +72,12 @@ def test_ppo(args=get_args()):
         net, args.action_shape,
         args.max_action, args.device
     ).to(args.device)
+
     critic = Critic(Net(
         args.layer_num, args.state_shape, device=args.device
     ), device=args.device).to(args.device)
+    # for param in actor.normflow_ds.parameters():
+    #     print(type(param), param.size())
     optim = torch.optim.Adam(list(
         actor.parameters()) + list(critic.parameters()), lr=args.lr)
     dist = DiagGaussian
@@ -108,8 +111,8 @@ def test_ppo(args=get_args()):
         #     return x >= env.spec.reward_threshold
         # else:
         #     return False
-        return x >= 200 #handdesigned reward threshold, what is this?
-
+        return x >= 200 #handdesigned reward threshold, what is this? ok, it is the threshold to stop learning. setting it as positive to never end...
+    
     # trainer
     result = onpolicy_trainer(
         policy, train_collector, test_collector, args.epoch,
