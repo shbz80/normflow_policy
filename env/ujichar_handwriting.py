@@ -51,13 +51,13 @@ class UJICharHandWritingEnv(gym.Env):
         self.tar_traj = s_traj - s_traj[-1, :]  #make destination origin
 
         self.dt = .01
-        self.m = 0.1
+        self.m = 0.05
         self.t = 0
         
         self.viewer = None
         
-        self.max_speed = 8
-        self.max_force = 10.
+        self.max_speed = 50
+        self.max_force = 100.
 
         force_high = np.array([self.max_speed, self.max_speed])
         high = np.array([2.5, 2.5, self.max_speed, self.max_speed], dtype=np.float32)

@@ -65,24 +65,32 @@ def jacobian_in_batch(y, x):
 
 class NormalizingFlowDynamicalSystem(nn.Module):
     
-    def __init__(self, dim=2, n_flows=3, K=None, D=None):
+    def __init__(self, dim=2, n_flows=3, hidden_dim=8, K=None, D=None, device='cpu'):
         super().__init__()
-        self.flows = [flow.RealNVP(dim, hidden_dim=8, base_network=flow.FCNN) for i in range(n_flows)]
+        self.flows = [flow.RealNVP(dim, hidden_dim=hidden_dim, base_network=flow.FCNN) for i in range(n_flows)]
         self.phi = nn.Sequential(*self.flows)
         self.potential = QuadraticPotentialFunction(feature=self.phi)
         self.dim = dim
+        self.device = device
+
+        if device == 'cpu':
+            self.phi.cpu()
+            self.potential.cpu()
+        else:
+            self.phi.cuda()
+            self.potential.cuda()
         
         if K is None:
-            self.K = torch.eye(self.dim)
+            self.K = torch.eye(self.dim, device=device)
         elif isinstance(K, (int, float)):
-            self.K = torch.eye(self.dim) * K
+            self.K = torch.eye(self.dim, device=device) * K
         else:
             self.K = K
 
         if D is None:
-            self.D = torch.eye(self.dim)
+            self.D = torch.eye(self.dim, device=device)
         elif isinstance(D, (int, float)):
-            self.D = torch.eye(self.dim) * D
+            self.D = torch.eye(self.dim, device=device) * D
         else:
             self.D = D
     
@@ -167,6 +175,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
                  max_action, device='cpu', unbounded=False):
         super().__init__()
         self.normflow_ds = preprocess_net    #this is the normflow dynamics...
+        self.normflow_ds.init_phi()
         self.device = device
         self._max = max_action
         self._unbounded = unbounded
@@ -187,7 +196,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         #of inference only torch module for policy evaluation. however, we need this for jacobian computation
         with torch.enable_grad():
             #the default destination is origin in R^n
-            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot).detach()
+            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=True, jac_damping=False).detach()
 
         shape = [1] * len(mu.shape)
         shape[1] = -1

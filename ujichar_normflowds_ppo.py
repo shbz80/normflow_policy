@@ -67,7 +67,7 @@ def test_ppo(args=get_args()):
     train_envs.seed(args.seed)
     test_envs.seed(args.seed)
     # model
-    net = NormalizingFlowDynamicalSystem(dim=np.prod(args.state_shape)//2, n_flows=args.layer_num)
+    net = NormalizingFlowDynamicalSystem(dim=np.prod(args.state_shape)//2, n_flows=args.layer_num, device=args.device)
     actor = NormalizingFlowDynamicalSystemActorProb(
         net, args.action_shape,
         args.max_action, args.device
