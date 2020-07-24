@@ -196,7 +196,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         #of inference only torch module for policy evaluation. however, we need this for jacobian computation
         with torch.enable_grad():
             #the default destination is origin in R^n
-            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=True, jac_damping=False).detach()
+            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=False, jac_damping=True)
 
         shape = [1] * len(mu.shape)
         shape[1] = -1
@@ -229,9 +229,9 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
                 **kwargs) -> Batch:
         ret_batch = super().forward(batch, state, **kwargs)
         #project batch action to nullspace to maintain stability
-        batch_u = ret_batch.act
-        batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
-        ret_batch.act = self.actor.normflow_ds.null_space_proj(batch_u, batch_x_dot).detach()
+        # batch_u = ret_batch.act
+        # batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
+        # ret_batch.act = self.actor.normflow_ds.null_space_proj(batch_u, batch_x_dot)
         return ret_batch
 
 

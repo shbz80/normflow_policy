@@ -110,6 +110,8 @@ def test_ppo(args=get_args()):
         return x >= 200 #handdesigned reward threshold, what is this?
 
     # trainer
+    # def train_preprocess_fn(epoch):
+    #     print(list(policy.actor.parameters())) 
     result = onpolicy_trainer(
         policy, train_collector, test_collector, args.epoch,
         args.step_per_epoch, args.collect_per_step, args.repeat_per_collect,

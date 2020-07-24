@@ -67,9 +67,9 @@ def test_ppo(args=get_args()):
     train_envs.seed(args.seed)
     test_envs.seed(args.seed)
     # model
-    net = NormalizingFlowDynamicalSystem(dim=np.prod(args.state_shape)//2, n_flows=args.layer_num, device=args.device)
+    nf_net = NormalizingFlowDynamicalSystem(dim=np.prod(args.state_shape)//2, n_flows=args.layer_num, device=args.device)
     actor = NormalizingFlowDynamicalSystemActorProb(
-        net, args.action_shape,
+        nf_net, args.action_shape,
         args.max_action, args.device
     ).to(args.device)
 
@@ -95,6 +95,7 @@ def test_ppo(args=get_args()):
         # if clip the action, ppo would not converge :)
         gae_lambda=args.gae_lambda)
     # collector
+
     train_collector = Collector(
         policy, train_envs, ReplayBuffer(args.buffer_size),
         preprocess_fn=None)
@@ -114,10 +115,12 @@ def test_ppo(args=get_args()):
         return x >= 200 #handdesigned reward threshold, what is this? ok, it is the threshold to stop learning. setting it as positive to never end...
     
     # trainer
+    # def train_preprocess_fn(epoch):
+    #     print(list(policy.actor.parameters())) 
     result = onpolicy_trainer(
         policy, train_collector, test_collector, args.epoch,
         args.step_per_epoch, args.collect_per_step, args.repeat_per_collect,
-        args.test_num, args.batch_size, stop_fn=stop_fn, save_fn=save_fn,
+        args.test_num, args.batch_size, stop_fn=stop_fn, save_fn=save_fn, 
         writer=writer)
     train_collector.close()
     test_collector.close()
