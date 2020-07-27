@@ -80,9 +80,9 @@ def test_ppo(args=get_args()):
     #     print(type(param), param.size())
     optim = torch.optim.Adam(list(
         actor.parameters()) + list(critic.parameters()), lr=args.lr)
-    dist = DiagGaussian
+
     policy = NormalizingFlowDynamicalSystemPPO(
-        actor, critic, optim, dist, args.gamma,
+        actor, critic, optim, args.gamma,
         max_grad_norm=args.max_grad_norm,
         eps_clip=args.eps_clip,
         vf_coef=args.vf_coef,

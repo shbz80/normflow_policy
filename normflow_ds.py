@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 
 import flow
@@ -146,9 +147,21 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         x:          batch of vectors with dim length
         plane_norm: batch of norms
         '''
-        norm_dir = torch.div(plane_norm, torch.clamp(torch.sum(plane_norm**2, dim=1, keepdim=True), min=1e-6))
-        proj_len = torch.bmm(x.view(x.shape[0], 1, x.shape[1]), plane_norm.view(plane_norm.shape[0], plane_norm.shape[1], 1)).squeeze(-1)
+        norm_dir = F.normalize(plane_norm, dim=1)
+        proj_len = torch.bmm(x.view(x.shape[0], 1, x.shape[1]), norm_dir.view(norm_dir.shape[0], norm_dir.shape[1], 1)).squeeze(-1)
         return x - proj_len*norm_dir
+    
+    def null_space(self, x_dot):
+        '''
+        get nullspace of given batch of x_dot such that
+        torch.bmm(nullspace, x_dot) == 0
+
+        return (batch_size, x_dot_dim, x_dot_dim)
+        '''
+        #note we can avoid matrix inversion because x_dot are vectors so we actually just need the inverse of norm
+        norm_square_inv = 1./torch.sum(x_dot**2, dim=1, keepdim=True).clamp(min=1e-6)
+        I = torch.eye(x_dot.shape[1], device=self.device).unsqueeze(0).repeat(x_dot.shape[0], 1, 1)
+        return I - norm_square_inv.unsqueeze(-1)*torch.bmm(x_dot.unsqueeze(-1), x_dot.unsqueeze(1))
 
     def init_phi(self):
 
@@ -202,13 +215,15 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         shape[1] = -1
         sigma = (self.sigma.view(shape) + torch.zeros_like(mu)).exp()
         return (mu, sigma), None
-    
+
+from torch.distributions.multivariate_normal import MultivariateNormal
+
 class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
     def __init__(self,
                  actor: NormalizingFlowDynamicalSystemActorProb,
                  critic: torch.nn.Module,
                  optim: torch.optim.Optimizer,
-                 dist_fn: torch.distributions.Distribution,
+                #  dist_fn: torch.distributions.Distribution,
                  discount_factor: float = 0.99,
                  max_grad_norm: Optional[float] = None,
                  eps_clip: float = .2,
@@ -220,19 +235,45 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
                  value_clip: bool = True,
                  reward_normalization: bool = True,
                  **kwargs) -> None:
-        super().__init__(actor, critic, optim, dist_fn, discount_factor, max_grad_norm, 
+        super().__init__(actor, critic, optim, MultivariateNormal, discount_factor, max_grad_norm, 
                 eps_clip, vf_coef, ent_coef, action_range,
                 gae_lambda, dual_clip, value_clip, reward_normalization, **kwargs)
     
     def forward(self, batch: Batch,
                 state: Optional[Union[dict, Batch, np.ndarray]] = None,
                 **kwargs) -> Batch:
-        ret_batch = super().forward(batch, state, **kwargs)
-        #project batch action to nullspace to maintain stability
-        # batch_u = ret_batch.act
+        """Compute action over the given batch data.
+
+        :return: A :class:`~tianshou.data.Batch` which has 4 keys:
+
+            * ``act`` the action.
+            * ``logits`` the network's raw output.
+            * ``dist`` the action distribution.
+            * ``state`` the hidden state.
+
+        .. seealso::
+
+            Please refer to :meth:`~tianshou.policy.BasePolicy.forward` for
+            more detailed explanation.
+        """
+        (mu, sigma), h = self.actor(batch.obs, state=state, info=batch.info)
+        
         # batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
-        # ret_batch.act = self.actor.normflow_ds.null_space_proj(batch_u, batch_x_dot)
-        return ret_batch
+        # nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
+        # #construct conv, also add a small regularization term to keep it valid
+        # cov = torch.bmm(torch.bmm(nullspace_mat, torch.diag_embed(sigma)), nullspace_mat.transpose(1, 2)) + torch.diag_embed(torch.ones_like(sigma))*1e-4
+        cov = torch.diag_embed(sigma)
+        #must be multivariate gaussian        
+        dist = self.dist_fn(loc=mu, covariance_matrix=cov)
+
+        # act = mu + torch.bmm(nullspace_mat, (torch.randn_like(mu)*sigma).unsqueeze(-1)).squeeze(-1) 
+        act = dist.sample()
+
+        if self._range:
+            act = act.clamp(self._range[0], self._range[1])
+        return Batch(logits=(mu, sigma), act=act, state=h, dist=dist)
+
+
 
 
 
