@@ -217,6 +217,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         return (mu, sigma), None
 
 from torch.distributions.multivariate_normal import MultivariateNormal
+from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
 
 class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
     def __init__(self,
@@ -235,7 +236,7 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
                  value_clip: bool = True,
                  reward_normalization: bool = True,
                  **kwargs) -> None:
-        super().__init__(actor, critic, optim, MultivariateNormal, discount_factor, max_grad_norm, 
+        super().__init__(actor, critic, optim, LowRankMultivariateNormal, discount_factor, max_grad_norm, 
                 eps_clip, vf_coef, ent_coef, action_range,
                 gae_lambda, dual_clip, value_clip, reward_normalization, **kwargs)
     

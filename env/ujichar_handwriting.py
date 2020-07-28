@@ -57,7 +57,7 @@ class UJICharHandWritingEnv(gym.Env):
         self.viewer = None
         
         self.max_speed = 10
-        self.max_force = 10.
+        self.max_force = 2.
 
         force_high = np.array([self.max_speed, self.max_speed])
         high = np.array([2.5, 2.5, self.max_speed, self.max_speed], dtype=np.float32)
