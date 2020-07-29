@@ -159,7 +159,8 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         return (batch_size, x_dot_dim, x_dot_dim)
         '''
         #note we can avoid matrix inversion because x_dot are vectors so we actually just need the inverse of norm
-        norm_square_inv = 1./torch.sum(x_dot**2, dim=1, keepdim=True).clamp(min=1e-6)
+        norm_square_inv = 1./torch.sum(x_dot**2, dim=1, keepdim=True).clamp(min=1e-4)
+        # print('x_dot', x_dot)
         I = torch.eye(x_dot.shape[1], device=self.device).unsqueeze(0).repeat(x_dot.shape[0], 1, 1)
         return I - norm_square_inv.unsqueeze(-1)*torch.bmm(x_dot.unsqueeze(-1), x_dot.unsqueeze(1))
 
@@ -216,8 +217,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         sigma = (self.sigma.view(shape) + torch.zeros_like(mu)).exp()
         return (mu, sigma), None
 
-from torch.distributions.multivariate_normal import MultivariateNormal
-from torch.distributions.lowrank_multivariate_normal import LowRankMultivariateNormal
+from normflow_policy.utils import LinearSubSpaceDiagGaussian
 
 class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
     def __init__(self,
@@ -236,7 +236,7 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
                  value_clip: bool = True,
                  reward_normalization: bool = True,
                  **kwargs) -> None:
-        super().__init__(actor, critic, optim, LowRankMultivariateNormal, discount_factor, max_grad_norm, 
+        super().__init__(actor, critic, optim, LinearSubSpaceDiagGaussian, discount_factor, max_grad_norm, 
                 eps_clip, vf_coef, ent_coef, action_range,
                 gae_lambda, dual_clip, value_clip, reward_normalization, **kwargs)
     
@@ -259,13 +259,16 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
         """
         (mu, sigma), h = self.actor(batch.obs, state=state, info=batch.info)
         
-        # batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
-        # nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
-        # #construct conv, also add a small regularization term to keep it valid
+        batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
+
+        nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
+
+        #construct conv factor, also add a small regularization term to keep it valid
         # cov = torch.bmm(torch.bmm(nullspace_mat, torch.diag_embed(sigma)), nullspace_mat.transpose(1, 2)) + torch.diag_embed(torch.ones_like(sigma))*1e-4
-        cov = torch.diag_embed(sigma)
+        
+        # cov = torch.diag_embed(sigma)
         #must be multivariate gaussian        
-        dist = self.dist_fn(loc=mu, covariance_matrix=cov)
+        dist = self.dist_fn(loc=mu, scale=sigma, lintrans=nullspace_mat)
 
         # act = mu + torch.bmm(nullspace_mat, (torch.randn_like(mu)*sigma).unsqueeze(-1)).squeeze(-1) 
         act = dist.sample()
