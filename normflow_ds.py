@@ -159,7 +159,7 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         return (batch_size, x_dot_dim, x_dot_dim)
         '''
         #note we can avoid matrix inversion because x_dot are vectors so we actually just need the inverse of norm
-        norm_square_inv = 1./torch.sum(x_dot**2, dim=1, keepdim=True).clamp(min=1e-4)
+        norm_square_inv = 1./torch.sum(x_dot**2, dim=1, keepdim=True).clamp(min=1e-6)
         # print('x_dot', x_dot)
         I = torch.eye(x_dot.shape[1], device=self.device).unsqueeze(0).repeat(x_dot.shape[0], 1, 1)
         return I - norm_square_inv.unsqueeze(-1)*torch.bmm(x_dot.unsqueeze(-1), x_dot.unsqueeze(1))
@@ -218,6 +218,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         return (mu, sigma), None
 
 from normflow_policy.utils import LinearSubSpaceDiagGaussian
+from tianshou.policy.dist import DiagGaussian
 
 class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
     def __init__(self,
@@ -258,19 +259,15 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
             more detailed explanation.
         """
         (mu, sigma), h = self.actor(batch.obs, state=state, info=batch.info)
-        
+        U = None
+
+        #comment these out to use regular diagonal gaussian exploration
         batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
-
         nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
-
-        #construct conv factor, also add a small regularization term to keep it valid
-        # cov = torch.bmm(torch.bmm(nullspace_mat, torch.diag_embed(sigma)), nullspace_mat.transpose(1, 2)) + torch.diag_embed(torch.ones_like(sigma))*1e-4
+        U, _, _ = torch.pca_lowrank(nullspace_mat, q=self.actor.normflow_ds.dim-1)
         
-        # cov = torch.diag_embed(sigma)
-        #must be multivariate gaussian        
-        dist = self.dist_fn(loc=mu, scale=sigma, lintrans=nullspace_mat)
+        dist = self.dist_fn(loc=mu, scale=sigma, lintrans=U)
 
-        # act = mu + torch.bmm(nullspace_mat, (torch.randn_like(mu)*sigma).unsqueeze(-1)).squeeze(-1) 
         act = dist.sample()
 
         if self._range:
