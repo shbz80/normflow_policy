@@ -138,7 +138,8 @@ class NormalizingFlowDynamicalSystem(nn.Module):
     def potential_with_damping(self, x, x_star, x_dot, M):
         #M: batched version of mass, could be spd depending on x
         x_potential = 0.5*self.potential.forward(x, x_star)
-        x_dot_potential = 0.5*torch.bmm(torch.bmm(x_dot.unsqueeze(1), M), x_dot).squeeze(-1)
+        x_dot_potential = 0.5*torch.bmm(torch.bmm(x_dot.unsqueeze(1), M), x_dot.unsqueeze(-1)).squeeze()
+        # print(x_potential.shape, x_dot_potential.shape)
         return x_potential + x_dot_potential
 
     def null_space_proj(self, x, plane_norm):
@@ -262,9 +263,9 @@ class NormalizingFlowDynamicalSystemPPO(PPOPolicy):
         U = None
 
         #comment these out to use regular diagonal gaussian exploration
-        batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
-        nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
-        U, _, _ = torch.pca_lowrank(nullspace_mat, q=self.actor.normflow_ds.dim-1)
+        # batch_x_dot = to_torch(batch.obs[:, self.actor.normflow_ds.dim:], device=self.actor.device, dtype=torch.float32)
+        # nullspace_mat = self.actor.normflow_ds.null_space(batch_x_dot)
+        # U, _, _ = torch.pca_lowrank(nullspace_mat, q=self.actor.normflow_ds.dim-1)
         
         dist = self.dist_fn(loc=mu, scale=sigma, lintrans=U)
 

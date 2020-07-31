@@ -106,6 +106,7 @@ def test_ppo(args=get_args()):
 
     def save_fn(policy):
         torch.save(policy.state_dict(), os.path.join(log_path, 'ujichar_policy.pth'))
+        torch.save(policy.actor.normflow_ds.state_dict(), os.path.join(log_path, 'ujichar_nfds.pth'))
 
     def stop_fn(x):
         # if env.spec.reward_threshold:
