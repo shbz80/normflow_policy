@@ -5,6 +5,9 @@ import argparse
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
+import gym
+import normflow_policy
+
 from tianshou.env import SubprocVectorEnv
 from tianshou.policy import PPOPolicy
 from tianshou.policy.dist import DiagGaussian
@@ -13,7 +16,7 @@ from tianshou.data import Collector, ReplayBuffer
 from tianshou.utils.net.common import Net
 from tianshou.utils.net.continuous import ActorProb, Critic
 
-from normflow_policy.env.ujichar_handwriting import UJICharHandWritingEnv 
+# from normflow_policy.env.ujichar_handwriting import UJICharHandWritingEnv 
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -48,17 +51,17 @@ def get_args():
     return args
 
 def test_ppo(args=get_args()):
-    env = UJICharHandWritingEnv()
+    env = gym.make(args.task)
     args.state_shape = env.observation_space.shape
     args.action_shape = env.action_space.shape
     args.max_action = env.action_space.high[0]
     # train_envs = gym.make(args.task)
     train_envs = SubprocVectorEnv([
-        lambda: UJICharHandWritingEnv()
+        lambda: gym.make(args.task)
         for _ in range(args.training_num)])
     # test_envs = gym.make(args.task)
     test_envs = SubprocVectorEnv([
-        lambda: UJICharHandWritingEnv()
+        lambda: gym.make(args.task)
         for _ in range(args.test_num)])
     # seed
     np.random.seed(args.seed)
@@ -100,7 +103,7 @@ def test_ppo(args=get_args()):
     writer = SummaryWriter(log_path)
 
     def save_fn(policy):
-        torch.save(policy.state_dict(), os.path.join(log_path, 'ujichar_policy.pth'))
+        torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 
     def stop_fn(x):
         # if env.spec.reward_threshold:
@@ -122,7 +125,7 @@ def test_ppo(args=get_args()):
     if __name__ == '__main__':
         pprint.pprint(result)
         # Let's watch its performance!
-        env = UJICharHandWritingEnv()
+        env = gym.make(args.task)
         collector = Collector(policy, env, preprocess_fn=None)
         result = collector.collect(n_step=100, render=args.render)
         print('Final reward: {0}, length: {1}'.format(result["rew"], result["len"]))

@@ -24,7 +24,7 @@ ACTION_SCALE = 1e-3
 # ACTION_SCALE = 1e-5
 STATE_SCALE = 1
 TERMINAL_SCALE = 1000
-T = 200
+T = 100
 EXP_SCALE = 2.
 
 class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):

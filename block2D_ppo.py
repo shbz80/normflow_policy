@@ -5,6 +5,9 @@ import argparse
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter
 
+import gym
+import normflow_policy
+
 from tianshou.env import SubprocVectorEnv
 from tianshou.policy import PPOPolicy
 from tianshou.policy.dist import DiagGaussian
@@ -13,21 +16,19 @@ from tianshou.data import Collector, ReplayBuffer
 from tianshou.utils.net.common import Net
 from tianshou.utils.net.continuous import ActorProb, Critic
 
-from normflow_policy.env.block2D import Block2DEnv 
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--task', type=str, default='Block2D-v0')
     parser.add_argument('--seed', type=int, default=1626)
     parser.add_argument('--buffer-size', type=int, default=20000)
     parser.add_argument('--lr', type=float, default=1e-3)
-    parser.add_argument('--gamma', type=float, default=1.)
+    parser.add_argument('--gamma', type=float, default=.99)
     parser.add_argument('--epoch', type=int, default=100)
     parser.add_argument('--step-per-epoch', type=int, default=2000)
     parser.add_argument('--collect-per-step', type=int, default=1)
     parser.add_argument('--repeat-per-collect', type=int, default=2)
-    parser.add_argument('--batch-size', type=int, default=128)
-    parser.add_argument('--layer-num', type=int, default=1)
+    parser.add_argument('--batch-size', type=int, default=64)
+    parser.add_argument('--layer-num', type=int, default=2)
     parser.add_argument('--training-num', type=int, default=16)
     parser.add_argument('--test-num', type=int, default=100)
     parser.add_argument('--logdir', type=str, default='log')
@@ -48,17 +49,17 @@ def get_args():
     return args
 
 def test_ppo(args=get_args()):
-    env = Block2DEnv()
+    env = gym.make(args.task)
     args.state_shape = env.observation_space.shape
     args.action_shape = env.action_space.shape
     args.max_action = env.action_space.high[0]
     # train_envs = gym.make(args.task)
     train_envs = SubprocVectorEnv([
-        lambda: Block2DEnv()
+        lambda: gym.make(args.task)
         for _ in range(args.training_num)])
     # test_envs = gym.make(args.task)
     test_envs = SubprocVectorEnv([
-        lambda: Block2DEnv()
+        lambda: gym.make(args.task)
         for _ in range(args.test_num)])
     # seed
     np.random.seed(args.seed)
@@ -100,7 +101,7 @@ def test_ppo(args=get_args()):
     writer = SummaryWriter(log_path)
 
     def save_fn(policy):
-        torch.save(policy.state_dict(), os.path.join(log_path, 'ujichar_policy.pth'))
+        torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 
     def stop_fn(x):
         # if env.spec.reward_threshold:
@@ -122,7 +123,7 @@ def test_ppo(args=get_args()):
     if __name__ == '__main__':
         pprint.pprint(result)
         # Let's watch its performance!
-        env = Block2DEnv()
+        env = gym.make(args.task)
         collector = Collector(policy, env, preprocess_fn=None)
         result = collector.collect(n_step=args.step_per_epoch, render=args.render)
         print('Final reward: {0}, length: {1}'.format(result["rew"], result["len"]))
