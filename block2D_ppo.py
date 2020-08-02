@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument('--collect-per-step', type=int, default=1)
     parser.add_argument('--repeat-per-collect', type=int, default=2)
     parser.add_argument('--batch-size', type=int, default=64)
-    parser.add_argument('--layer-num', type=int, default=2)
+    parser.add_argument('--layer-num', type=int, default=1)
     parser.add_argument('--training-num', type=int, default=16)
     parser.add_argument('--test-num', type=int, default=100)
     parser.add_argument('--logdir', type=str, default='log')
