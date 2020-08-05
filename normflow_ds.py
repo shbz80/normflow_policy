@@ -211,7 +211,7 @@ class NormalizingFlowDynamicalSystemActorProb(nn.Module):
         #of inference only torch module for policy evaluation. however, we need this for jacobian computation
         with torch.enable_grad():
             #the default destination is origin in R^n
-            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=False, jac_damping=True)
+            mu = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=False, jac_damping=False)
 
         shape = [1] * len(mu.shape)
         shape[1] = -1
