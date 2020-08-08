@@ -181,6 +181,36 @@ from typing import Dict, List, Tuple, Union, Optional
 from tianshou.data import Batch, to_torch
 from tianshou.policy import PPOPolicy
 
+class NormalizingFlowDynamicalSystemActor(nn.Module):
+    """
+    deterministic actor accounting stability of samples for tianshou
+    """
+    def __init__(self, preprocess_net, action_shape,
+                 max_action, device='cpu', unbounded=False):
+        super().__init__()
+        self.normflow_ds = preprocess_net    #this is the normflow dynamics...
+        self.normflow_ds.init_phi()
+        self.device = device
+        self._max = max_action
+        self._unbounded = unbounded
+
+    def forward(self, s, state=None, **kwargs):
+        s = to_torch(s, device=self.device, dtype=torch.float32)
+        s = s.flatten(1)
+        
+        x = s[:, :self.normflow_ds.dim]
+        x.requires_grad_()
+        x_dot = s[:, self.normflow_ds.dim:]
+        x_dot.requires_grad_()
+
+        #we need to enable grad computation because tianshou collector called no_grad with an expectation
+        #of inference only torch module for policy evaluation. however, we need this for jacobian computation
+        with torch.enable_grad():
+            #the default destination is origin in R^n
+            act = self.normflow_ds.forward_with_damping(x, torch.zeros_like(x), x_dot, inv=False, jac_damping=False)
+
+        return act, None
+
 class NormalizingFlowDynamicalSystemActorProb(nn.Module):
     """
     actor accounting stability of samples for tianshou
