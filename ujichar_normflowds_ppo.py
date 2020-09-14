@@ -16,7 +16,8 @@ from tianshou.data import Collector, ReplayBuffer
 from tianshou.utils.net.common import Net
 from tianshou.utils.net.continuous import Critic
 
-from normflow_policy.normflow_ds import NormalizingFlowDynamicalSystem, NormalizingFlowDynamicalSystemActorProb, NormalizingFlowDynamicalSystemPPO
+from normflow_policy.normflow_ds import NormalizingFlowDynamicalSystem
+from normflow_policy.normflow_policy_tianshou import NormalizingFlowDynamicalSystemActorProb, NormalizingFlowDynamicalSystemPPO
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -69,7 +70,7 @@ def test_ppo(args=get_args()):
     train_envs.seed(args.seed)
     test_envs.seed(args.seed)
     # model
-    nf_net = NormalizingFlowDynamicalSystem(dim=np.prod(args.state_shape)//2, n_flows=args.layer_num, device=args.device)
+    nf_net = NormalizingFlowDynamicalSystem(dim=int(np.prod(args.state_shape)//2), n_flows=args.layer_num, device=args.device)
     actor = NormalizingFlowDynamicalSystemActorProb(
         nf_net, args.action_shape,
         args.max_action, args.device

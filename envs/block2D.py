@@ -47,11 +47,11 @@ class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         reward_ctrl = -ACTION_SCALE * np.square(a).sum()
         reward = reward_dist + reward_ctrl
 
+        done = False
         self.t+=1
         if self.t >= T:
             done = True
-        else:
-            done = False
+
         ob[:2]-=GOAL
         return ob, reward, done, dict(reward_dist=reward_dist, reward_ctrl=reward_ctrl)
 
