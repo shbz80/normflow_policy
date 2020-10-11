@@ -11,3 +11,9 @@ register(
      entry_point='normflow_policy.envs:Block2DEnv',
      max_episode_steps=1000,
 )
+
+register(
+    id='YumiPegCart-v0',
+    entry_point='normflow_policy.envs:YumiPegCartEnv',
+    max_episode_steps=1000,
+)
