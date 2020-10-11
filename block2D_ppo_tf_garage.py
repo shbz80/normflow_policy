@@ -36,7 +36,7 @@ def block2D_ppo_tf_garage(ctxt=None, seed=1):
     """
     set_seed(seed)
     with TFTrainer(snapshot_config=ctxt) as trainer:
-        env = GymEnv('Block2D-v0')
+        env = GymEnv('Block2D-v0',max_episode_length=T)
 
         policy = GaussianMLPPolicy(
             env_spec=env.spec,
@@ -76,7 +76,7 @@ def block2D_ppo_tf_garage(ctxt=None, seed=1):
             # center_adv=False,
         )
 
-        trainer.setup(algo, env, n_workers=6)
+        trainer.setup(algo, env, n_workers=4)
 
         trainer.train(n_epochs=N, batch_size=S*T, plot=True, store_episodes=True)
 

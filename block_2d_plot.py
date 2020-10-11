@@ -3,31 +3,34 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
-from normflow_policy.envs import block2D
+import torch
+from normflow_policy.envs.block2D import T
 
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-exp_name = 'block2D_ppo_tf_garage'
+exp_name = 'block2d_nfppo_garage_10'
+# exp_name = 'block2D_ppo_torch_garage'
 SUCCESS_DIST = 0.025
-plot_skip = 10
+plot_skip = 20
 plot_traj = True
 traj_skip = 2
-GOAL = block2D.GOAL
+# GOAL = block2D.GOAL
+epoch_start = 0
+epoch_num = 100
 
-epoch_num = 50
-sample_num = 20
-T = 200
-tm = range(T)
+plot_energy = False
 
-for ep in range(0,epoch_num):
+for ep in range(epoch_start,epoch_num):
     if ((ep==0) or (not ((ep+1) % plot_skip))) and plot_traj:
         filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
         infile = open(filename, 'rb')
         ep_data = pickle.load(infile)
         infile.close()
-
         epoch = ep_data['stats'].last_episode
+        sample_num = len(epoch)
         obs0 = epoch[0]['observations']
+        T = obs0.shape[0]
+        tm = range(T)
         act0 = epoch[0]['actions']
         rwd_s0 = epoch[0]['env_infos']['reward_dist']
         rwd_a0 = epoch[0]['env_infos']['reward_ctrl']
@@ -90,7 +93,7 @@ rewards_undisc_mean = np.zeros(epoch_num)
 rewards_undisc_std = np.zeros(epoch_num)
 success_mat = np.zeros((epoch_num, sample_num))
 
-for ep in range(epoch_num):
+for ep in range(epoch_start, epoch_num):
     filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
     infile = open(filename, 'rb')
     ep_data = pickle.load(infile)
@@ -102,29 +105,6 @@ for ep in range(epoch_num):
     for s in range(sample_num):
         pos_norm = np.linalg.norm(epoch[s]['observations'][:, :2], axis=1)
         success_mat[ep, s] = np.min(pos_norm)<SUCCESS_DIST
-
-# for ep in range(epoch_num):
-#     if ((ep == 0) or (not ((ep + 1) % plot_skip))):
-#         fig = plt.figure()
-#         ax1 = fig.add_subplot(1, 2, 1)
-#         ax2 = fig.add_subplot(1, 2, 2)
-#         epoch = exp_log[ep]
-#         for s in range(0,sample_num):
-#             if (s == 0) or (not ((s + 1) % traj_skip)):
-#                 p1 = epoch[s]['observations'][:, 0]
-#                 p2 = epoch[s]['observations'][:, 1]
-#                 d1 = p1 - GOAL[0]
-#                 d2 = p2 - GOAL[1]
-#                 # pos_norm = -np.linalg.norm(epoch[s]['observations'][:, :2] - GOAL, axis=1)
-#                 # ax.plot(pos_norm)
-#                 # ax1.plot(p1)
-#                 # ax2.plot(p2)
-#                 # ax1.plot(d1)
-#                 # ax2.plot(d2)
-#                 ax1.plot(d1**2)
-#                 ax2.plot(d2**2)
-#                 ax1.plot(d1 ** 2+d2**2)
-#                 ax2.plot(d2 ** 2+d1**2)
 
 success_stat = np.sum(success_mat, axis=1)*(100/sample_num)
 
@@ -140,6 +120,42 @@ ax.set_ylabel('Succes rate')
 ax.set_xlabel('Epoch')
 ax.plot(success_stat)
 ax.legend()
+
+if plot_energy:
+    for ep in range(0,epoch_num):
+        if ((ep==0) or (not ((ep+1) % plot_skip))) and plot_traj:
+            filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
+            infile = open(filename, 'rb')
+            ep_data = pickle.load(infile)
+            infile.close()
+            phi = ep_data['algo'].policy._module.phi
+            sample_num = len(epoch)
+            epoch = ep_data['stats'].last_episode
+            obs0 = epoch[0]['observations']
+            T = obs0.shape[0]
+            tm = range(T)
+            pos = obs0[:, :2].astype('float32')
+            pos = torch.from_numpy(pos)
+            with torch.no_grad():
+                eng_0 = phi(pos)
+            eng_0 = eng_0.numpy()
+            eng = eng_0.reshape(T,1)
+
+            for sp in range(0,sample_num):
+                if ((sp == 0) or (not ((sp + 1) % traj_skip))):
+                    sample = epoch[sp]
+                    p = sample['observations'][:,:2].reshape(T,1,2).astype('float32')
+                    p = torch.from_numpy(p)
+                    with torch.no_grad():
+                        e = phi(p)
+                    eng = np.concatenate((eng, e), axis=1)
+
+            fig = plt.figure()
+            plt.title('Epoch '+str(ep))
+            plt.axis('off')
+            ax = fig.add_subplot(1, 1, 1)
+            ax.set_title('Phi')
+            ax.plot(tm, eng, color='g')
 
 plt.show()
 
