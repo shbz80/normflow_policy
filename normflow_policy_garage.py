@@ -35,6 +35,7 @@ class GaussianNormFlowPolicy(StochasticPolicy):
                 dim=2, n_flows=3, hidden_dim=8, K=None, D=None,
                 normal_distribution_cls=Normal,
                 init_std=1.0,
+                jac_damping=False,
                 name='GaussianNormFlowPolicy'):
         super().__init__(env_spec, name)
         self._obs_dim = env_spec.observation_space.flat_dim
@@ -52,6 +53,7 @@ class GaussianNormFlowPolicy(StochasticPolicy):
         #this is probably slightly different from GaussianMLP that has only one param for variance
         init_std_param = torch.Tensor([init_std]).log()
         self._init_std = torch.nn.Parameter(init_std_param)
+        self._jac_damping = jac_damping
 
     def forward(self, observations):
         """Compute the action distributions from the observations.
@@ -80,7 +82,7 @@ class GaussianNormFlowPolicy(StochasticPolicy):
         x_dot.requires_grad_()
 
         with torch.enable_grad():
-            mean_flatten = self._module.forward_with_damping(x=x, x_star=x_star, x_dot=x_dot, inv=False, jac_damping=False)
+            mean_flatten = self._module.forward_with_damping(x=x, x_star=x_star, x_dot=x_dot, inv=False, jac_damping=self._jac_damping)
 
         #restore mean shape
         broadcast_shape = list(observations.shape[:-1]) + [self._action_dim]
