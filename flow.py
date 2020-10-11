@@ -27,14 +27,21 @@ class RealNVP(nn.Module):
     """
     def __init__(self, dim, hidden_dim = 8, base_network=FCNN):
         super().__init__()
-        self.dim = dim
-        self.t1 = base_network(dim // 2, dim // 2, hidden_dim)
-        self.s1 = base_network(dim // 2, dim // 2, hidden_dim)
-        self.t2 = base_network(dim // 2, dim // 2, hidden_dim)
-        self.s2 = base_network(dim // 2, dim // 2, hidden_dim)
+        self.D = dim
+        self.Dlo = dim//2
+        self.Dhi = dim - dim//2
+        # self.t1 = base_network(dim // 2, dim // 2, hidden_dim)
+        # self.s1 = base_network(dim // 2, dim // 2, hidden_dim)
+        # self.t2 = base_network(dim // 2, dim // 2, hidden_dim)
+        # self.s2 = base_network(dim // 2, dim // 2, hidden_dim)
+
+        self.t1 = base_network(self.Dlo, self.Dhi, hidden_dim)
+        self.s1 = base_network(self.Dlo, self.Dhi, hidden_dim)
+        self.t2 = base_network(self.Dhi, self.Dlo, hidden_dim)
+        self.s2 = base_network(self.Dhi, self.Dlo, hidden_dim)
 
     def forward(self, x):
-        lower, upper = x[:,:self.dim // 2], x[:,self.dim // 2:]
+        lower, upper = x[:,:self.Dlo], x[:,self.Dlo:]
         t1_transformed = self.t1(lower)
         s1_transformed = self.s1(lower)
         upper = t1_transformed + upper * torch.exp(s1_transformed)
@@ -48,7 +55,7 @@ class RealNVP(nn.Module):
         return z
 
     def inverse(self, z):
-        lower, upper = z[:,:self.dim // 2], z[:,self.dim // 2:]
+        lower, upper = z[:,:self.D // 2], z[:,self.D // 2:]
         t2_transformed = self.t2(upper)
         s2_transformed = self.s2(upper)
         lower = (lower - t2_transformed) * torch.exp(-s2_transformed)
