@@ -15,7 +15,7 @@ plot_skip = 20
 plot_traj = True
 traj_skip = 2
 # GOAL = block2D.GOAL
-epoch_start = 0
+epoch_start = 65
 epoch_num = 100
 
 plot_energy = False

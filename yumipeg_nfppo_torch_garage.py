@@ -38,7 +38,7 @@ def yumipeg_nfppo_garage(ctxt=None, seed=1):
 
     policy = GaussianNormFlowPolicy(env.spec,
                                     n_flows=2,
-                                    hidden_dim=8,
+                                    hidden_dim=16,
                                     init_std=2.,
                                     K = 1.,
                                     D = 1.,
@@ -58,36 +58,26 @@ def yumipeg_nfppo_garage(ctxt=None, seed=1):
                # center_adv=False,
                )
 
-    # resume_dir = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment/yumipeg_nfppo_garage'
-    # trainer.restore(resume_dir, from_epoch=47)
-    # trainer.resume()
+    # resume_dir = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment/yumipeg_nfppo_garage_7'
+    # trainer.restore(resume_dir, from_epoch=29)
+    # trainer.resume(n_epochs=50)
     trainer.setup(algo, env, n_workers=6)
     trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
 
 yumipeg_nfppo_garage(seed=1)
 
-#yumipeg_nfppo_garage_0,1
-# seed=1
-# env._action_space = Box(low=-5, high=5, shape=(dA,))
 # env._observation_space = Box(low=-2, high=2.0, shape=(dO,))
-# policy = GaussianNormFlowPolicy(env.spec,
-#                                     n_flows=2,
-#                                     hidden_dim=8,
-#                                     init_std=1.,
-#                                     K = 1.,
-#                                     D = 1.,
-#                                     jac_damping=True)
 # inv=False
-# value_function = LinearFeatureBaseline(env_spec=env.spec)
 # N = 100  # number of epochs
 # S = 15  # number of episodes in an epoch
+# value_function = LinearFeatureBaseline(env_spec=env.spec)
 # algo = PPO(env_spec=env.spec,
 #            policy=policy,
 #            value_function=value_function,
 #            discount=0.99,
 #            lr_clip_range=0.2,
 #            )
-# trainer.setup(algo, env, n_workers=4)
+# trainer.setup(algo, env, n_workers=6)
 # GOAL = np.array([-1.50337106, -1.24545874,  1.21963181,  0.46298941,  2.18633697,  1.51383283,
 #   0.57184653])
 # INIT = np.array([-1.14, -1.21, 0.965, 0.728, 1.97, 1.49, 0.])
@@ -112,5 +102,70 @@ yumipeg_nfppo_garage(seed=1)
 # reward_params['ACTION_SCALE'] = 1e-3
 # reward_params['v'] = 2
 # reward_params['w'] = 1
+# reward_params['TERMINAL_STATE_SCALE'] = 20
+
+#yumipeg_nfppo_garage_0,1
+# seed=1
+# env._action_space = Box(low=-5, high=5, shape=(dA,))
+# policy = GaussianNormFlowPolicy(env.spec,
+#                                     n_flows=2,
+#                                     hidden_dim=8,
+#                                     init_std=1.,
+#                                     K = 1.,
+#                                     D = 1.,
+#                                     jac_damping=True)
+# trainer.setup(algo, env, n_workers=4)
 # reward_params['TERMINAL_STATE_SCALE'] = 10
 # size="0.024"
+
+#yumipeg_nfppo_garage_2
+# seed=1
+# env._action_space = Box(low=-10, high=10, shape=(dA,))
+# policy = GaussianNormFlowPolicy(env.spec,
+#                                     n_flows=2,
+#                                     hidden_dim=8,
+#                                     init_std=3.,
+#                                     K = 1.,
+#                                     D = 1.,
+#                                     jac_damping=True)
+# reward_params['TERMINAL_STATE_SCALE'] = 20
+# size="0.023"
+
+#yumipeg_nfppo_garage_3
+# seed=1
+# env._action_space = Box(low=-10, high=10, shape=(dA,))
+# policy = GaussianNormFlowPolicy(env.spec,
+#                                     n_flows=2,
+#                                     hidden_dim=8,
+#                                     init_std=3.,
+#                                     K = 1.,
+#                                     D = 1.,
+#                                     jac_damping=True)
+# reward_params['TERMINAL_STATE_SCALE'] = 20
+# size="0.023"
+
+#yumipeg_nfppo_garage_4,5
+# seed=1
+# env._action_space = Box(low=-10, high=10, shape=(dA,))
+# policy = GaussianNormFlowPolicy(env.spec,
+#                                     n_flows=2,
+#                                     hidden_dim=8,
+#                                     init_std=3.,
+#                                     K = 1.,
+#                                     D = 1.,
+#                                     jac_damping=True)
+# reward_params['TERMINAL_STATE_SCALE'] = 20
+# size="0.024"
+
+#yumipeg_nfppo_garage_6
+# seed=1
+# env._action_space = Box(low=-10, high=10, shape=(dA,))
+# policy = GaussianNormFlowPolicy(env.spec,
+#                                     n_flows=2,
+#                                     hidden_dim=8,
+#                                     init_std=3.,
+#                                     K = 1.,
+#                                     D = 1.,
+#                                     jac_damping=True)
+# reward_params['TERMINAL_STATE_SCALE'] = 20
+# size="0.0235"

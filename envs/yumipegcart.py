@@ -33,6 +33,9 @@ dO = 6
 dJ = 7
 D_rot = np.eye(3)*4
 
+SIGMA = np.array([0.05,0.05,0.01])
+rand_init = True
+
 kin_params_yumi = {}
 kin_params_yumi['urdf'] = '/home/shahbaz/Software/yumi_kinematics/yumikin/models/yumi_ABB_left.urdf'
 kin_params_yumi['base_link'] = 'world'
@@ -54,7 +57,7 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         self.D_rot = np.max(np.sqrt(np.multiply(self.M_rot,self.K_rot)))*np.eye(3)
         self.J_Ad_curr = None
         self.initialized = True
-        self.action_space = Box(low=-5, high=5, shape=(dA,))
+        self.action_space = Box(low=-10, high=10, shape=(dA,))
         self.observation_space = Box(low=-2, high=2.0, shape=(dO,))
         # self.reset_model()
 
@@ -67,12 +70,14 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
             reward, rewards = cart_rwd_func_1(ex, f)
             jtrq = self.J_Ad_curr.T.dot(f)
             assert (jtrq.shape == (dJ,))
+            # jtrq = np.zeros(7) # todo
             self.do_simulation(jtrq, self.frame_skip)
             done = False
             # return ex, reward, done, dict(reward_dist=np.sum(rewards[:-1]), reward_ctrl=rewards[-1])
             obs = np.concatenate((ex[:3],ex[6:9]))
             return obs, reward, done, dict({'er': ex[3:6],'erdot': ex[9:],'jx':jx, 'fr': f_r,'jt':jtrq})
         else:
+            # a = np.zeros(7) # todo
             self.do_simulation(a, self.frame_skip)
             obs = self._get_obs()
             reward = None
@@ -92,13 +97,33 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def reset_model(self):
         init_qpos = INIT
         init_qvel = np.zeros(7)
-        self.set_state(init_qpos, init_qvel)
         if self.initialized:
             del self.yumikin
             self.yumikin = YumiKinematics(self.kinparams)
+            if rand_init:
+                rot_mat_goal = self.yumikin.Rd
+                rot_mat_init = rot_mat_goal
+                pose_init_mean_mat = self.yumikin.kdl_kin.forward(INIT)
+                trans_init_mean = np.array(pose_init_mean_mat[:3, 3])
+                trans_init_mean = trans_init_mean.reshape(-1)
+                trans_init_cov = np.diag(SIGMA**2)
+                trans_init = np.random.multivariate_normal(trans_init_mean, trans_init_cov)
+                # trans_init = trans_init_mean + np.array([0, 0.2, 0])
+                pose_init_mat = np.zeros((4,4))
+                pose_init_mat[:3, :3] = rot_mat_init
+                pose_init_mat[:3, 3] = trans_init
+                pose_init_mat[3, 3] = 1.
+                init_qpos = self.yumikin.kdl_kin.inverse(pose_init_mat, q_guess=INIT)
+                pose_init_mat_new = self.yumikin.kdl_kin.forward(init_qpos)
+                inv_kin_err = np.linalg.norm(pose_init_mat * pose_init_mat_new**-1 - np.mat(np.eye(4)))
+                if (init_qpos is None) or (inv_kin_err>1e-4):
+                    print('IK failed')
+                    assert(False)
+            self.set_state(init_qpos, init_qvel)
             ex, jx = self._get_obs()
             return np.concatenate((ex[:3],ex[6:9]))
         else:
+            self.set_state(init_qpos, init_qvel)
             return self._get_obs()
 
     def _get_obs(self):

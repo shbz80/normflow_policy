@@ -7,27 +7,27 @@ import torch
 from normflow_policy.envs.yumipegcart import T
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-exp_name = 'yumipeg_nfppo_garage_2'
+exp_name = 'yumipeg_nfppo_garage_8'
 # exp_name = 'block2D_ppo_torch_garage'
 SUCCESS_DIST = 0.02
-plot_skip = 20
-plot_traj = True
+plot_skip = 10
+plot_traj = False
 traj_skip = 3
-epoch_start = 0
-epoch_num = 32
+epoch_start = 30
+epoch_num = 50
 T = 200
 tm = range(T)
 plot_energy = False
+sample_num = 15
 
-
-for ep in range(epoch_start,epoch_num):
-    if ((ep==0) or (not ((ep+1) % plot_skip))) and plot_traj:
-        filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
+for i in range(epoch_start,epoch_num):
+    if ((i==0) or (not ((i+1) % plot_skip))) and plot_traj:
+        filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(i) + '.pkl'
         infile = open(filename, 'rb')
         ep_data = pickle.load(infile)
         infile.close()
         epoch = ep_data['stats'].last_episode
-        sample_num = len(epoch)
+        # sample_num = len(epoch)
         ep = epoch[0]['observations'][:,:3].reshape(T,1,3)
         ep = np.concatenate((ep, epoch[0]['env_infos']['er'].reshape(T, 1, 3)),axis=2)
         ev = epoch[0]['observations'][:, 3:].reshape(T, 1, 3)
@@ -62,7 +62,7 @@ for ep in range(epoch_start,epoch_num):
                 rw = np.concatenate((rw, rw_), axis=1)
 
         fig = plt.figure()
-        # plt.title('Epoch ' + str(ep))
+        plt.title('Epoch ' + str(i))
         plt.axis('off')
         # plot Cartesian positions
         for i in range(7):
@@ -95,17 +95,17 @@ rewards_undisc_mean = np.zeros(epoch_num)
 rewards_undisc_std = np.zeros(epoch_num)
 success_mat = np.zeros((epoch_num, sample_num))
 
-for ep in range(epoch_start, epoch_num):
-    filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
+for i in range(epoch_start, epoch_num):
+    filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(i) + '.pkl'
     infile = open(filename, 'rb')
     ep_data = pickle.load(infile)
     infile.close()
     epoch = ep_data['stats'].last_episode
-    rewards_undisc_mean[ep] = np.mean([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
-    rewards_undisc_std[ep] = np.std([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
+    rewards_undisc_mean[i] = np.mean([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
+    rewards_undisc_std[i] = np.std([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
     for s in range(sample_num):
-        pos_norm = np.linalg.norm(epoch[s]['observations'][:, :2], axis=1)
-        success_mat[ep, s] = np.min(pos_norm)<SUCCESS_DIST
+        pos_norm = np.linalg.norm(epoch[s]['observations'][:, :3], axis=1)
+        success_mat[i, s] = np.min(pos_norm)<SUCCESS_DIST
 
 success_stat = np.sum(success_mat, axis=1)*(100/sample_num)
 
