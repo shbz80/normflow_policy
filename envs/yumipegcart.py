@@ -34,7 +34,9 @@ dJ = 7
 D_rot = np.eye(3)*4
 
 SIGMA = np.array([0.05,0.05,0.01])
+SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 rand_init = True
+rand_joint_space = True
 
 kin_params_yumi = {}
 kin_params_yumi['urdf'] = '/home/shahbaz/Software/yumi_kinematics/yumikin/models/yumi_ABB_left.urdf'
@@ -100,7 +102,7 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         if self.initialized:
             del self.yumikin
             self.yumikin = YumiKinematics(self.kinparams)
-            if rand_init:
+            if rand_init and not rand_joint_space:
                 rot_mat_goal = self.yumikin.Rd
                 rot_mat_init = rot_mat_goal
                 pose_init_mean_mat = self.yumikin.kdl_kin.forward(INIT)
@@ -119,6 +121,14 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
                 if (init_qpos is None) or (inv_kin_err>1e-4):
                     print('IK failed')
                     assert(False)
+            elif rand_init and rand_joint_space:
+                while True:
+                    init_qpos = np.random.multivariate_normal(INIT, np.diag(SIGMA_JT**2))
+                    max_rot = np.max(np.abs(self.yumikin.fwd_pose(init_qpos)[3:]-self.yumikin.goal_cart[3:]))
+                    if max_rot < np.pi/4.:
+                        break
+            else:
+                None
             self.set_state(init_qpos, init_qvel)
             ex, jx = self._get_obs()
             return np.concatenate((ex[:3],ex[6:9]))
