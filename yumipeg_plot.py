@@ -7,13 +7,14 @@ import torch
 from normflow_policy.envs.yumipegcart import T
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-exp_name = 'yumipeg_nfppo_garage_8'
+# exp_name = 'yumipeg_nfppo_garage_8'
+exp_name = 'yumipeg_ppo_garage_4'
 # exp_name = 'block2D_ppo_torch_garage'
 SUCCESS_DIST = 0.02
-plot_skip = 10
+plot_skip = 20
 plot_traj = False
 traj_skip = 3
-epoch_start = 30
+epoch_start = 0
 epoch_num = 50
 T = 200
 tm = range(T)
@@ -94,7 +95,8 @@ for i in range(epoch_start,epoch_num):
 rewards_undisc_mean = np.zeros(epoch_num)
 rewards_undisc_std = np.zeros(epoch_num)
 success_mat = np.zeros((epoch_num, sample_num))
-
+state_dist_all = np.zeros((epoch_num, sample_num, T))
+state_dist_last = np.zeros((epoch_num,sample_num))
 for i in range(epoch_start, epoch_num):
     filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(i) + '.pkl'
     infile = open(filename, 'rb')
@@ -103,9 +105,37 @@ for i in range(epoch_start, epoch_num):
     epoch = ep_data['stats'].last_episode
     rewards_undisc_mean[i] = np.mean([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
     rewards_undisc_std[i] = np.std([np.sum(epoch[s]['rewards']) for s in range(sample_num)])
+
     for s in range(sample_num):
         pos_norm = np.linalg.norm(epoch[s]['observations'][:, :3], axis=1)
         success_mat[i, s] = np.min(pos_norm)<SUCCESS_DIST
+        state_dist_all[i][s] = np.linalg.norm(epoch[s]['observations'][:, :3], axis=1).reshape(-1)
+        state_dist_last[i][s] = np.linalg.norm(epoch[s]['observations'][:, :3], axis=1)[-1]
+
+itr_state_dist = 10
+state_dist_all = state_dist_all[:itr_state_dist,:,:].reshape(-1)
+state_dist_last = state_dist_last[:itr_state_dist,:].reshape(-1)
+
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(1, 1, 1)
+# ax1.set_title(r'\textbf{(a)}')
+# ax1.set_xlabel(r'Iteration')
+# ax1.set_ylabel(r'Reward')
+# ax1.set_xticks([0.0,0.4,0.8])
+# ax1.set_ylim(-1.7e4,-0.2e4)
+# data = [dist_ours, dist_vices, last_dist_ours, last_dist_vices]
+data = [state_dist_all, state_dist_last]
+# ax1.boxplot(data, showfliers=False, whis=(0,100),vert=False)
+bp = ax1.boxplot(data, patch_artist = False, showfliers=False, whis=(0,100),vert=False)
+for median in bp['medians']:
+    median.set(color ='blue',
+               linewidth = 1)
+ax1.set_yticklabels(['All pos','Final pos'])
+ax1.set_xlabel('m',labelpad=1)
+# plt.subplots_adjust(left=0.429, bottom=0.2, right=.99, top=0.98, wspace=0.5, hspace=0.7)
+
+
+
 
 success_stat = np.sum(success_mat, axis=1)*(100/sample_num)
 
