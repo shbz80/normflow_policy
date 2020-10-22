@@ -41,7 +41,8 @@ class RealNVP(nn.Module):
         self.s2 = base_network(self.Dhi, self.Dlo, hidden_dim)
 
     def forward(self, x):
-        lower, upper = x[:,:self.Dlo], x[:,self.Dlo:]
+        lower, upper = x[:,:self.Dlo], x[:,self.Dlo:] # todo
+        # lower, upper = x[:, :self.dim//2], x[:, self.dim//2:]
         t1_transformed = self.t1(lower)
         s1_transformed = self.s1(lower)
         upper = t1_transformed + upper * torch.exp(s1_transformed)

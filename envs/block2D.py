@@ -123,7 +123,6 @@ class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def reset_model(self):
         var = SIGMA ** 2
         cov = np.diag(var * np.ones(2))
-        # cov = np.diag(var * np.ones(2))
         mu = INIT
         # init_qpos = np.random.multivariate_normal(mu, cov)
         init_qpos = INIT
