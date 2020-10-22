@@ -14,8 +14,8 @@ from gym.envs.mujoco import mujoco_env
 
 #assumes <body name="blockx" pos="0 0 0"> in xml
 OFFSET = np.array([0.4, -0.6])
-# OFFSET_1 = np.array([0, -0.1])  # NFPPPO random init
-OFFSET_1 = np.array([0, 0])         # NFPPPO fixed init
+OFFSET_1 = np.array([0, -0.1])  # NFPPPO random init
+# OFFSET_1 = np.array([0, 0])         # NFPPPO fixed init
 GOAL = np.array([0, 0.5])+OFFSET
 # INIT = np.array([-0.3, 0.8])+OFFSET # pos1
 INIT = np.array([-0.3, 0.8])+OFFSET+OFFSET_1
@@ -112,7 +112,7 @@ class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         self.t+=1
         if self.t >= T:
             reward, rewards = cart_rwd_func_1(obs, a, terminal=True)
-            done = True
+            done = False
         return obs, reward, done, dict(reward_dist=np.sum(rewards[:2]), reward_ctrl=rewards[2])
 
     def viewer_setup(self):
@@ -123,10 +123,9 @@ class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
     def reset_model(self):
         var = SIGMA ** 2
         cov = np.diag(var * np.ones(2))
-        # cov = np.diag(var * np.ones(2))
         mu = INIT
-        # init_qpos = np.random.multivariate_normal(mu, cov)
-        init_qpos = INIT
+        init_qpos = np.random.multivariate_normal(mu, cov)
+        # init_qpos = INIT
         init_qvel = np.zeros(2)
         self.set_state(init_qpos, init_qvel)
         self.t = 0

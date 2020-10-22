@@ -55,13 +55,13 @@ def yumipeg_ppo_garage(ctxt=None, seed=1):
     #                                           hidden_sizes=(32, 32),
     #                                           hidden_nonlinearity=torch.tanh,
     #                                           output_nonlinearity=None)
-    N = 50  # number of epochs
+    N = 100  # number of epochs
     S = 15  # number of episodes in an epoch
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
                discount=0.99,
-               lr_clip_range=0.05,
+               lr_clip_range=0.1,
                # center_adv=False,
                )
 
@@ -72,124 +72,3 @@ def yumipeg_ppo_garage(ctxt=None, seed=1):
     trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
 
 yumipeg_ppo_garage(seed=1)
-
-# env._observation_space = Box(low=-2, high=2.0, shape=(dO,))
-# inv=False
-# N = 100  # number of epochs
-# S = 15  # number of episodes in an epoch
-# value_function = LinearFeatureBaseline(env_spec=env.spec)
-# algo = PPO(env_spec=env.spec,
-#            policy=policy,
-#            value_function=value_function,
-#            discount=0.99,
-#            lr_clip_range=0.2,
-#            )
-# trainer.setup(algo, env, n_workers=6)
-# GOAL = np.array([-1.50337106, -1.24545874,  1.21963181,  0.46298941,  2.18633697,  1.51383283,
-#   0.57184653])
-# INIT = np.array([-1.14, -1.21, 0.965, 0.728, 1.97, 1.49, 0.])
-# T = 200
-# dA = 3
-# dO = 6
-# dJ = 7
-# D_rot = np.eye(3)*4
-# kin_params_yumi = {}
-# kin_params_yumi['urdf'] = '/home/shahbaz/Software/yumi_kinematics/yumikin/models/yumi_ABB_left.urdf'
-# kin_params_yumi['base_link'] = 'world'
-# # kin_params_yumi['end_link'] = 'left_tool0'
-# kin_params_yumi['end_link'] = 'left_contact_point'
-# kin_params_yumi['euler_string'] = 'sxyz'
-# kin_params_yumi['goal'] = GOAL
-# reward_params = {}
-# reward_params['LIN_SCALE'] = 1
-# reward_params['ROT_SCALE'] = 1
-# reward_params['POS_SCALE'] = 1
-# reward_params['VEL_SCALE'] = 1e-1
-# reward_params['STATE_SCALE'] = 1
-# reward_params['ACTION_SCALE'] = 1e-3
-# reward_params['v'] = 2
-# reward_params['w'] = 1
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-
-#yumipeg_ppo_garage
-# seed=1
-# env._action_space = Box(low=-10, high=10, shape=(dA,))
-# policy = GaussianMLPPolicy(env.spec,
-#                            hidden_sizes=[32, 32],
-#                            hidden_nonlinearity=torch.tanh,
-#                            output_nonlinearity=None,
-#                            init_std=3.)
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-# SIGMA = np.array([0.05,0.05,0.01])
-# size="0.0235"
-
-#yumipeg_ppo_garage_1
-# seed=1
-# env._action_space = Box(low=-10, high=10, shape=(dA,))
-# policy = GaussianMLPPolicy(env.spec,
-#                            hidden_sizes=[32, 32],
-#                            hidden_nonlinearity=torch.tanh,
-#                            output_nonlinearity=None,
-#                            init_std=3.)
-# algo = PPO(env_spec=env.spec,
-#            policy=policy,
-#            value_function=value_function,
-#            discount=0.99,
-#            lr_clip_range=0.1,
-#            )
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-# SIGMA = np.array([0.05,0.05,0.01])
-# size="0.0235"
-
-#yumipeg_ppo_garage_2,3
-# seed=1
-# env._action_space = Box(low=-10, high=10, shape=(dA,))
-# policy = GaussianMLPPolicy(env.spec,
-#                            hidden_sizes=[32, 32],
-#                            hidden_nonlinearity=torch.tanh,
-#                            output_nonlinearity=None,
-#                            init_std=3.)
-# algo = PPO(env_spec=env.spec,
-#            policy=policy,
-#            value_function=value_function,
-#            discount=0.99,
-#            lr_clip_range=0.1,
-#            )
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-# SIGMA = np.array([0.05,0.05,0.01])
-# size="0.0245"
-
-#yumipeg_ppo_garage_4
-# seed=1
-# env._action_space = Box(low=-10, high=10, shape=(dA,))
-# policy = GaussianMLPPolicy(env.spec,
-#                            hidden_sizes=[32, 32],
-#                            hidden_nonlinearity=torch.tanh,
-#                            output_nonlinearity=None,
-#                            init_std=3.)
-# algo = PPO(env_spec=env.spec,
-#            policy=policy,
-#            value_function=value_function,
-#            discount=0.99,
-#            lr_clip_range=0.1,
-#            )
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-# size="0.0245"
-
-#yumipeg_ppo_garage_5
-# seed=1
-# env._action_space = Box(low=-10, high=10, shape=(dA,))
-# policy = GaussianMLPPolicy(env.spec,
-#                            hidden_sizes=[32, 32],
-#                            hidden_nonlinearity=torch.tanh,
-#                            output_nonlinearity=None,
-#                            init_std=3.)
-# algo = PPO(env_spec=env.spec,
-#            policy=policy,
-#            value_function=value_function,
-#            discount=0.99,
-#            lr_clip_range=0.05,
-#            )
-# reward_params['TERMINAL_STATE_SCALE'] = 20
-# SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
-# size="0.0235"

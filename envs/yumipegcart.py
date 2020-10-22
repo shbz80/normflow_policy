@@ -34,7 +34,7 @@ dJ = 7
 D_rot = np.eye(3)*4
 
 SIGMA = np.array([0.05,0.05,0.01])
-SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
+SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])*2.
 rand_init = True
 rand_joint_space = True
 

@@ -8,18 +8,18 @@ from normflow_policy.envs.block2D import T
 
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-exp_name = 'block2d_nfppo_garage_10'
+exp_name = 'block2d_nfppo_garage'
 # exp_name = 'block2D_ppo_torch_garage'
 SUCCESS_DIST = 0.025
 plot_skip = 20
-plot_traj = True
-traj_skip = 2
+plot_traj = False
+traj_skip = 3
 # GOAL = block2D.GOAL
-epoch_start = 65
+epoch_start = 0
 epoch_num = 100
-
+sample_num = 15
 plot_energy = False
-
+tm = range(T)
 for ep in range(epoch_start,epoch_num):
     if ((ep==0) or (not ((ep+1) % plot_skip))) and plot_traj:
         filename = base_filename + '/' + exp_name + '/' + 'itr_' + str(ep) + '.pkl'
@@ -29,8 +29,6 @@ for ep in range(epoch_start,epoch_num):
         epoch = ep_data['stats'].last_episode
         sample_num = len(epoch)
         obs0 = epoch[0]['observations']
-        T = obs0.shape[0]
-        tm = range(T)
         act0 = epoch[0]['actions']
         rwd_s0 = epoch[0]['env_infos']['reward_dist']
         rwd_a0 = epoch[0]['env_infos']['reward_ctrl']

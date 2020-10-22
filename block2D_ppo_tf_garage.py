@@ -58,7 +58,7 @@ def block2D_ppo_tf_garage(ctxt=None, seed=1):
         # center_adv to False and turn off policy gradient. See
         # tf.algos.NPO for detailed documentation.
         N = 50  # number of epochs
-        S = 30  # number of episodes in an epoch
+        S = 15  # number of episodes in an epoch
         algo = PPO(
             env_spec=env.spec,
             policy=policy,
@@ -76,7 +76,7 @@ def block2D_ppo_tf_garage(ctxt=None, seed=1):
             # center_adv=False,
         )
 
-        trainer.setup(algo, env, n_workers=4)
+        trainer.setup(algo, env, n_workers=12)
 
         trainer.train(n_epochs=N, batch_size=S*T, plot=True, store_episodes=True)
 
