@@ -7,8 +7,8 @@ import torch
 from normflow_policy.envs.yumipegcart import T
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-# exp_name = 'yumipeg_nfppo_garage_e_17'
-exp_name = 'yumipeg_ppo_garage_e_2'
+# exp_name = 'yumipeg_nfppo_garage_e_8'
+exp_name = 'yumipeg_ppo_garage_51'
 
 SUCCESS_DIST = 0.02
 plot_skip = 20
@@ -127,8 +127,7 @@ ax1 = fig1.add_subplot(1, 1, 1)
 data = [state_dist_all, state_dist_last]
 # ax1.boxplot(data, showfliers=False, whis=(0,100),vert=False)
 # bp = ax1.boxplot(data, patch_artist = False, showfliers=False, whis=(0,100),vert=False)
-bp = ax1.boxplot(data, patch_artist = False, showfliers=False,vert=False)
-
+bp = ax1.boxplot(data, patch_artist = False, showfliers=False, vert=False)
 for median in bp['medians']:
     median.set(color ='blue',
                linewidth = 1)
