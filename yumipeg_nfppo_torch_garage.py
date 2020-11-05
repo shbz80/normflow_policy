@@ -48,8 +48,8 @@ def yumipeg_nfppo_garage(ctxt=None, seed=1):
     #                                           hidden_sizes=(32, 32),
     #                                           hidden_nonlinearity=torch.tanh,
     #                                           output_nonlinearity=None)
-    N = 1  # number of epochs
-    S = 1  # number of episodes in an epoch
+    N = 100  # number of epochs
+    S = 15  # number of episodes in an epoch
     algo = PPO(env_spec=env.spec,
                policy=policy,
                value_function=value_function,
@@ -58,11 +58,11 @@ def yumipeg_nfppo_garage(ctxt=None, seed=1):
                # center_adv=False,
                )
 
-    resume_dir = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment/yumipeg_nfppo_garage_e_14'
-    trainer.restore(resume_dir, from_epoch=98)
-    trainer.resume(n_epochs=100)
-    # trainer.setup(algo, env, n_workers=6)
-    # trainer.train(n_epochs=N, batch_size=T*S, plot=False, store_episodes=True)
+    # resume_dir = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment/yumipeg_nfppo_garage_e_14'
+    # trainer.restore(resume_dir, from_epoch=98)
+    # trainer.resume(n_epochs=100)
+    trainer.setup(algo, env, n_workers=2)
+    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
 
 yumipeg_nfppo_garage(seed=1)
 

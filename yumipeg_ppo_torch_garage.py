@@ -48,7 +48,7 @@ def yumipeg_ppo_garage(ctxt=None, seed=1):
                                hidden_sizes=[32, 32],
                                hidden_nonlinearity=torch.tanh,
                                output_nonlinearity=None,
-                               init_std=2.)
+                               init_std=1.)
 
     value_function = LinearFeatureBaseline(env_spec=env.spec)
     # value_function = GaussianMLPValueFunction(env_spec=env.spec,
@@ -71,7 +71,7 @@ def yumipeg_ppo_garage(ctxt=None, seed=1):
     trainer.setup(algo, env, n_workers=6)
     trainer.train(n_epochs=N, batch_size=T*S, plot=False, store_episodes=True)
 
-yumipeg_ppo_garage(seed=2)
+yumipeg_ppo_garage(seed=1)
 
 # env._observation_space = Box(low=-2, high=2.0, shape=(dO,))
 # inv=False

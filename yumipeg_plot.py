@@ -7,15 +7,15 @@ import torch
 from normflow_policy.envs.yumipegcart import T
 
 base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-# exp_name = 'yumipeg_nfppo_garage_e_8'
-exp_name = 'yumipeg_ppo_garage_51'
+# exp_name = 'yumipeg_nfppo_garage_e_14'
+exp_name = 'yumipeg_ppo_garage_52'
 
-SUCCESS_DIST = 0.02
+SUCCESS_DIST = 0.004
 plot_skip = 20
 plot_traj = False
 traj_skip = 3
 epoch_start = 0
-epoch_num = 100
+epoch_num = 60
 T = 200
 tm = range(T)
 plot_energy = False
