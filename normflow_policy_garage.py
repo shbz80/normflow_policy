@@ -38,6 +38,7 @@ class GaussianNormFlowPolicy(StochasticPolicy):
                 jac_damping=False,
                 name='GaussianNormFlowPolicy'):
         super().__init__(env_spec, name)
+        # self.env_spec = env_spec
         self._obs_dim = env_spec.observation_space.flat_dim
         self._action_dim = env_spec.action_space.flat_dim
         self._module = nfds.NormalizingFlowDynamicalSystem(
