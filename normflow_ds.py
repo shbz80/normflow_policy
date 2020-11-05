@@ -120,6 +120,7 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         # print(y.requires_grad, x.requires_grad)
         phi_jac = jacobian_in_batch(y, x)
         potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
+        potential_grad_K = torch.matmul(self.K,potential_grad)
 
         if jac_damping:
             damping_acc = -torch.bmm(
@@ -131,9 +132,9 @@ class NormalizingFlowDynamicalSystem(nn.Module):
             damping_acc = -torch.bmm(self.D.expand(x_dot.shape[0], -1, -1), x_dot.unsqueeze(-1)).squeeze(-1)
 
         if inv:
-            return torch.solve(potential_grad, phi_jac)[0].squeeze(-1) + damping_acc
+            return torch.solve(potential_grad_K, phi_jac)[0].squeeze(-1) + damping_acc
         else: 
-            return torch.bmm(phi_jac.transpose(1, 2), potential_grad).squeeze(-1) + damping_acc
+            return torch.bmm(phi_jac.transpose(1, 2), potential_grad_K).squeeze(-1) + damping_acc
     
     def potential_with_damping(self, x, x_star, x_dot, M):
         #M: batched version of mass, could be spd depending on x
