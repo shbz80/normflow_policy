@@ -185,20 +185,21 @@
 <!-- ======================The hole setup================================== -->
 <!--        <body name="fl" pos="0.4639 0.0588 0.01">-->
       <body name="fl" pos="0.46393511 0.105 0.01717972">
+<!--           <body name="fl" pos="0.46393511 0.105 0.02">-->
 <!--          <geom name="w0" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.025 0.025 0.2" contype="0" conaffinity="0" />-->
 <!--          <geom name="fl" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.2 0.2 0.01" contype="1" conaffinity="1" />-->
 
           <body name="w1" pos="0.1125 0. 0.025">
-            <geom name="w1" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.0875 0.2 0.015" contype="1" conaffinity="1" />
+            <geom name="w1" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.0875 0.2 0.02" contype="1" conaffinity="1" />
           </body>
           <body name="w2" pos="-0.1125 0. 0.025">
-            <geom name="w2" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.0875 0.2 0.015" contype="1" conaffinity="1" />
+            <geom name="w2" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.0875 0.2 0.02" contype="1" conaffinity="1" />
           </body>
           <body name="w3" pos="0. -0.1125 0.025">
-            <geom name="w3" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.025 0.0875 0.015" contype="1" conaffinity="1" />
+            <geom name="w3" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.025 0.0875 0.02" contype="1" conaffinity="1" />
           </body>
           <body name="w4" pos="0. 0.1125 0.025">
-            <geom name="w4" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.025 0.0875 0.015" contype="1" conaffinity="1" />
+            <geom name="w4" rgba="0.3 0.5 0.6 1" type="box" group="1" size="0.025 0.0875 0.02" contype="1" conaffinity="1" />
           </body>
       </body>
 
