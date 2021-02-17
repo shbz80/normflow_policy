@@ -111,7 +111,7 @@ class Block2DEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         done = False
         self.t+=1
         if self.t >= T:
-            reward, rewards = cart_rwd_func_1(obs, a, terminal=True)
+            reward, rewards = cart_rwd_func_1(obs, a, terminal=True) # it should be state not obs todo
             done = True
         return obs, reward, done, dict(reward_dist=np.sum(rewards[:2]), reward_ctrl=rewards[2])
 

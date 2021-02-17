@@ -100,3 +100,7 @@ class GaussianNormFlowPolicy(StochasticPolicy):
             dist = Independent(dist, 1)
 
         return (dist, dict(mean=dist.mean, log_std=(dist.variance**.5).log()))
+
+    def _get_action(self, observations):
+        (dist, dict) = self.forward(observations)
+        return dist.mean

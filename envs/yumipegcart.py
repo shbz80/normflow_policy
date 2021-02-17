@@ -19,7 +19,7 @@ GOAL_CART = [ 0.46473501,  0.10293446,  0.10217953, -0.00858317,  0.69395054,  0
 # GOAL 2
 # GOAL = np.array([-1.63688, -1.22777, 1.28612, 0.446995, 2.21936, 1.57011, 0.47748]) # goal
 
-list_init_qpos = pickle.load(open("rnd_qpos_init.p", "rb")) # SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])*4.
+# list_init_qpos = pickle.load(open("rnd_qpos_init.p", "rb")) # SIGMA_JT = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])*4.
 # INIT 1
 INIT = np.array([-1.14, -1.21, 0.965, 0.728, 1.97, 1.49, 0.]) #todo
 # INIT = list_init_qpos[4]
@@ -69,7 +69,7 @@ class YumiPegCartEnv(mujoco_env.MujocoEnv, utils.EzPickle):
         self.action_space = Box(low=-10, high=10, shape=(dA,))
         self.observation_space = Box(low=-2, high=2.0, shape=(dO,))
         self.rest_count = 0
-        self.list_init_qpos = pickle.load(open("rnd_qpos_init.p", "rb"))
+        # self.list_init_qpos = pickle.load(open("rnd_qpos_init.p", "rb"))
         # self.reset_model()
 
     def step(self, a):

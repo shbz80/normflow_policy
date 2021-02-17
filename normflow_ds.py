@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-import flow
+from normflow_policy import flow
 
 class QuadraticPotentialFunction(nn.Module):
 
@@ -120,6 +120,7 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         # print(y.requires_grad, x.requires_grad)
         phi_jac = jacobian_in_batch(y, x)
         potential_grad = -self.potential.forward_grad_feature(x, x_star).unsqueeze(-1)
+        potential_grad_K = torch.matmul(self.K, potential_grad)
 
         if jac_damping:
             damping_acc = -torch.bmm(
@@ -131,9 +132,9 @@ class NormalizingFlowDynamicalSystem(nn.Module):
             damping_acc = -torch.bmm(self.D.expand(x_dot.shape[0], -1, -1), x_dot.unsqueeze(-1)).squeeze(-1)
 
         if inv:
-            return torch.solve(potential_grad, phi_jac)[0].squeeze(-1) + damping_acc
+            return torch.solve(potential_grad_K, phi_jac)[0].squeeze(-1) + damping_acc
         else: 
-            return torch.bmm(phi_jac.transpose(1, 2), potential_grad).squeeze(-1) + damping_acc
+            return torch.bmm(phi_jac.transpose(1, 2), potential_grad_K).squeeze(-1) + damping_acc
     
     def potential_with_damping(self, x, x_star, x_dot, M):
         #M: batched version of mass, could be spd depending on x
@@ -165,11 +166,14 @@ class NormalizingFlowDynamicalSystem(nn.Module):
         I = torch.eye(x_dot.shape[1], device=self.device).unsqueeze(0).repeat(x_dot.shape[0], 1, 1)
         return I - norm_square_inv.unsqueeze(-1)*torch.bmm(x_dot.unsqueeze(-1), x_dot.unsqueeze(1))
 
-    def init_phi(self):
+    def init_phi(self, init_func, init_const):
 
         def param_init(m):
             if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-                torch.nn.init.xavier_uniform_(m.weight)
+                if init_const is not None:
+                    init_func(m.weight, init_const)
+                else:
+                    init_func(m.weight)
                 if m.bias is not None:
                     torch.nn.init.zeros_(m.bias)
         

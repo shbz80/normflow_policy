@@ -7,13 +7,15 @@ import torch
 from normflow_policy.envs.block2D import T
 
 
-base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
-exp_name = 'block2d_nfppo_garage_e_3'
-# exp_name = 'block2D_ppo_torch_garage_5'
+# base_filename = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment'
+base_filename = '/media/shahbaz/My Passport/nfdata/data/local/experiment/'
+# exp_name = 'block2d_nfppo_garage_e_3'
+exp_name = 'block2D_ppo_torch_garage_4'
+# exp_name = 'block2d_nfsac_garage_3'
 SUCCESS_DIST = 0.025
 plot_skip = 20
-plot_traj = False
-traj_skip = 2
+plot_traj = True
+traj_skip = 3
 # GOAL = block2D.GOAL
 epoch_start = 0
 epoch_num = 100
@@ -183,4 +185,6 @@ if plot_energy:
             ax.plot(tm, eng, color='g')
 
 plt.show()
+None
+
 

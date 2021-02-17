@@ -11,8 +11,10 @@ class FCNN(nn.Module):
         self.network = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
             nn.GELU(),
+            # nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.GELU(),
+            # nn.ReLU(),
             nn.Linear(hidden_dim, out_dim),
         )
 

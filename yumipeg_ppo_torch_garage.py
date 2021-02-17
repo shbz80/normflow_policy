@@ -69,7 +69,7 @@ def yumipeg_ppo_garage(ctxt=None, seed=1):
     # trainer.restore(resume_dir, from_epoch=98)
     # trainer.resume(n_epochs=100)
     trainer.setup(algo, env, n_workers=6)
-    trainer.train(n_epochs=N, batch_size=T*S, plot=False, store_episodes=True)
+    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
 
 yumipeg_ppo_garage(seed=1)
 
