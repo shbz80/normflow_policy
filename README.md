@@ -11,3 +11,12 @@ Reinforcement Learning (RL) of robotic manipulation skills, despite its impressi
 * [PyTorch](https://pytorch.org/) Deep learning framework
 * [MuJoCo](https://mujoco.org/) Physics simulator
 
+## Run experiments
+
+### 2D Block-Insertion
+* Run block2D_nfppo_garage.py for the proposed method
+* Run block2D_ppo_torch_garage.py for the baseline method
+
+### YuMi Peg-In-Hole
+* Run yumipeg_nfppo_torch_garage.py for the proposed method
+* Run yumipeg_ppo_torch_garage.py for the baseline method
