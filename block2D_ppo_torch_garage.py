@@ -50,8 +50,8 @@ def block2D_ppo_torch_garage(ctxt=None, seed=1):
                discount=0.99,
                lr_clip_range=0.2,)
 
-    trainer.setup(algo, env, n_workers=6)
-    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
+    trainer.setup(algo, env, n_workers=4)
+    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=False)
 
 block2D_ppo_torch_garage(seed=2)
 

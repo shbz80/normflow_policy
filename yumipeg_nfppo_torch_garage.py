@@ -10,6 +10,8 @@ from garage.trainer import Trainer
 from normflow_policy.envs.yumipegcart import T, dA, dO
 from garage.np.baselines import LinearFeatureBaseline
 from normflow_policy.normflow_policy_garage import GaussianNormFlowPolicy
+from garage.sampler import LocalSampler, RaySampler, Sampler, MultiprocessingSampler
+from garage.sampler.default_worker import DefaultWorker
 from akro.box import Box
 from garage import EnvSpec
 import numpy as np
@@ -61,8 +63,9 @@ def yumipeg_nfppo_garage(ctxt=None, seed=1):
     # resume_dir = '/home/shahbaz/Software/garage36/normflow_policy/data/local/experiment/yumipeg_nfppo_garage_e_14'
     # trainer.restore(resume_dir, from_epoch=98)
     # trainer.resume(n_epochs=100)
-    trainer.setup(algo, env, n_workers=2)
-    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=True)
+    # trainer.setup(algo, env, n_workers=2)
+    trainer.setup(algo, env, n_workers=4, sampler_cls=LocalSampler)
+    trainer.train(n_epochs=N, batch_size=T*S, plot=True, store_episodes=False)
 
 yumipeg_nfppo_garage(seed=1)
 
