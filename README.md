@@ -1,5 +1,5 @@
 # Learning Stable Normalizing-Flow Control for Robotic Manipulation
-This repo is the code base for the paper _Learning Stable Normalizing-Flow Control for Robotic Manipulation_, Khader, S. A., Yin, H., Falco, P., & Kragic, D. (2020), IEEE International Conference on Robotics and Automation (ICRA). [[IEEE]](https://ieeexplore.ieee.org/document/9562071) [[arXiv]](https://arxiv.org/abs/2011.00072)
+This repo is the code base for the paper _Learning Stable Normalizing-Flow Control for Robotic Manipulation_, Khader, S. A., Yin, H., Falco, P., & Kragic, D. (2021), IEEE International Conference on Robotics and Automation (ICRA). [[IEEE]](https://ieeexplore.ieee.org/document/9562071) [[arXiv]](https://arxiv.org/abs/2011.00072)
 
 https://www.youtube.com/watch?v=Vl8HFq-lk94&t=1s
 
